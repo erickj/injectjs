@@ -4,14 +4,14 @@
 <head>
   <!-- The test runners are run out of the build directory, but lets make
        everything relative to the project root -->
-  <base href=".." />
+  <base href="<%= base_root %>" />
   <title><%= @target %>: Spec Runner</title>
 
   <link rel="shortcut icon" type="image/png" href="<%= jasmine_root %>/jasmine_favicon.png">
   <link rel="stylesheet" type="text/css" href="<%= jasmine_root %>/jasmine.css">
   <script type="text/javascript" src="<%= jasmine_root %>/jasmine.js"></script>
   <script type="text/javascript" src="<%= jasmine_root %>/jasmine-html.js"></script>
-  <script type="text/javascript" src="jasmine-console-runner.js"></script>
+  <script type="text/javascript" src="<%= base_root %>/jasmine-console-runner.js"></script>
 
   <!-- BEGIN DYNAMIC SCRIPT VALUES -->
   <% @scripts.each do |script_name| %>

@@ -2,14 +2,17 @@ require 'erb'
 require 'fileutils'
 require 'open3'
 
+NAMESPACE = 'injectjs'
+DEFAULT_TARGET = 'injectjs'
+
 BASE_DIR = FileUtils.pwd
 JS_DIR = BASE_DIR + '/lib'
 SPEC_DIR = BASE_DIR + '/spec'
 
 BUILD_DIR =  BASE_DIR + '/build'
-TEST_BUILD_DIR = BUILD_DIR + '/test'
+TEST_BUILD_DIR = BUILD_DIR + '/specs'
 
-THIRD_PARTY_DIR = BASE_DIR + '/../third-party'
+THIRD_PARTY_DIR = BASE_DIR + '/third-party'
 CLOSURE_LIB_DIR = THIRD_PARTY_DIR + '/closure-library'
 CLOSURE_LIB_THIRD_PARTY_DIR = THIRD_PARTY_DIR + '/closure-library-third-party'
 
@@ -17,11 +20,13 @@ BUILD_DIRS = [
               TEST_BUILD_DIR,
              ]
 
+TEST_PROTOCOL = "file://"
 SPECHELPER_PATH = File.join(SPEC_DIR, 'spechelper.js');
 SPECRUNNER_TPL = '_specrunner.erb'
 PHANTOMJS_RUNNER = 'phantomjs run-jasmine.js'
 JASMINE_ROOT_PATH = THIRD_PARTY_DIR + '/jasmine-1.3.1'
 
+JS_AUTO_INCLUDES = [JS_DIR + '/injectjs.js']
 CLOSURE_BUILDER = CLOSURE_LIB_DIR + '/bin/build/closurebuilder.py'
 CLOSURE_BUILDER_ROOTS = "--root=#{CLOSURE_LIB_DIR} \
   --root=#{CLOSURE_LIB_THIRD_PARTY_DIR} \
@@ -31,9 +36,6 @@ CLOSURE_COMPILER = THIRD_PARTY_DIR + '/closure-compiler/compiler.jar'
 
 GJSLINT = '/usr/local/bin/gjslint'
 GJSLINT_EXCLUDES = BASE_DIR + '/.gjslintexcludes'
-
-NAMESPACE = 'injectjs'
-DEFAULT_TARGET = 'injectjs'
 
 task :default => [:concat]
 
@@ -105,7 +107,7 @@ namespace :test do
   desc 'Run all specs for [namespace] or ' + NAMESPACE
   task :specs, :namespace do |t, args|
     ns = Utils.normalize_target_name(args[:namespace] || NAMESPACE, { :no_cap => true })
-    spec_build_dir = BUILD_DIR
+    spec_build_dir = TEST_BUILD_DIR
 
     puts "Running specs for namespace [#{ns}]"
     puts
@@ -141,7 +143,7 @@ end
 ##
 # Class needed for the ERB template. See Util.build_specrunner
 class SpecRunnerBindingProvider
-  attr_accessor :target, :scripts, :jasmine_root
+  attr_accessor :target, :scripts, :jasmine_root, :base_root
   def get_binding
     binding
   end
@@ -183,23 +185,28 @@ class Utils
     puts "Listing dependencies for target: #{js_target}"
     build_args ||= []
     build_args << '--output_mode=list'
-    build_js(js_target, build_args)
+    deps = build_js(js_target, build_args)
+    deps.split.map do |f|
+      File.join(BASE_DIR, f.gsub(/^#{BASE_DIR}\/?/,''))
+    end
   end
 
   def self.build_specrunner(target)
     puts
     puts "Building specrunner for target: #{target}"
-    build_args = ["--input=#{SPECHELPER_PATH}"]
-    script_names = Utils.get_script_deps(target, build_args).split
-    output_file = target + '.html'
+    script_names = Utils.get_script_deps(target)
+    script_names.insert(-2, SPECHELPER_PATH)
+    puts script_names
 
     template_obj = SpecRunnerBindingProvider.new
     template_obj.target = target
-    template_obj.scripts = script_names
-    template_obj.jasmine_root = JASMINE_ROOT_PATH
+    template_obj.scripts = script_names.map { |s| TEST_PROTOCOL + s }
+    template_obj.jasmine_root = TEST_PROTOCOL + JASMINE_ROOT_PATH
+    template_obj.base_root = TEST_PROTOCOL + BASE_DIR
     template = File.read(SPECRUNNER_TPL)
 
-    path = File.join(BUILD_DIR, output_file)
+    output_file = target + '.html'
+    path = File.join(TEST_BUILD_DIR, output_file)
     File.open(path, 'w') do |f|
       f.write(ERB.new(template).result(template_obj.get_binding))
     end
@@ -211,13 +218,13 @@ class Utils
     path = File.join(BUILD_DIR, filename)
     puts "Creating #{path} for namespace #{js_target}..."
 
-    args = ['--output_mode=compiled', "--compiler_jar=#{CLOSURE_COMPILER}"]
-    args.push('-f "--compilation_level=WHITESPACE_ONLY"')
-    args.push('-f "--flagfile=compiler.flags"')
-    args.push('-f "--formatting=PRETTY_PRINT"')
+    build_args = ['--output_mode=compiled', "--compiler_jar=#{CLOSURE_COMPILER}"]
+    build_args.push('-f "--compilation_level=WHITESPACE_ONLY"')
+    build_args.push('-f "--flagfile=compiler.flags"')
+    build_args.push('-f "--formatting=PRETTY_PRINT"')
 
     File.open(path, 'w') do |f|
-      content = build_js(js_target, args)
+      content = build_js(js_target, build_args)
       f.write(content)
     end
     puts "Wrote file #{path}"
@@ -227,13 +234,12 @@ class Utils
     path = File.join(BUILD_DIR, filename)
     puts "Creating compiled #{path} for namespace #{js_target}..."
 
-    args = ['--output_mode=compiled', "--compiler_jar=#{CLOSURE_COMPILER}"]
-
-    args.push('-f "--compilation_level=ADVANCED_OPTIMIZATIONS"') if advanced
-    args.push('-f "--flagfile=compiler.flags"')
+    build_args = ['--output_mode=compiled', "--compiler_jar=#{CLOSURE_COMPILER}"]
+    build_args.push('-f "--compilation_level=ADVANCED_OPTIMIZATIONS"') if advanced
+    build_args.push('-f "--flagfile=compiler.flags"')
 
     File.open(path, 'w') do |f|
-      content = build_js(js_target, args)
+      content = build_js(js_target, build_args)
       f.write(content)
     end
     puts "Wrote file #{path}"
@@ -245,6 +251,9 @@ class Utils
   # - compiling source
   # - listing target dependencies
   def self.build_js(js_target, *build_args)
+    JS_AUTO_INCLUDES.each do |inc|
+      build_args.push('--input=%s'%inc)
+    end
     build_roots = is_target_spec?(js_target) ? CLOSURE_BUILDER_ROOTS_SPEC : CLOSURE_BUILDER_ROOTS
     stdin, stdout, stderr, wait_thrd = Open3.popen3 <<EOS
     #{CLOSURE_BUILDER} \
@@ -284,9 +293,9 @@ EOS
   ##
   # Run the spec in phantomjs
   def self.run_spec(target)
-    spec_path = File.join(BUILD_DIR, "#{target}.html")
+    spec_url = TEST_PROTOCOL + File.join(TEST_BUILD_DIR, "#{target}.html")
     puts "Running Spec for #{target}"
-    puts %x{#{PHANTOMJS_RUNNER} file://#{spec_path}}
+    puts %x{#{PHANTOMJS_RUNNER} #{spec_url}}
   end
 
 end
