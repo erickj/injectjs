@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <!-- The test runners are run out of the build directory, but lets make
+       everything relative to the project root -->
+  <base href=".." />
+  <title><%= @target %>: Spec Runner</title>
+
+  <link rel="shortcut icon" type="image/png" href="<%= jasmine_root %>/jasmine_favicon.png">
+  <link rel="stylesheet" type="text/css" href="<%= jasmine_root %>/jasmine.css">
+  <script type="text/javascript" src="<%= jasmine_root %>/jasmine.js"></script>
+  <script type="text/javascript" src="<%= jasmine_root %>/jasmine-html.js"></script>
+  <script type="text/javascript" src="jasmine-console-runner.js"></script>
+
+  <!-- BEGIN DYNAMIC SCRIPT VALUES -->
+  <% @scripts.each do |script_name| %>
+    <script type="text/javascript" src="<%= script_name %>"></script>
+  <% end %>
+  <!-- END DYNAMIC SCRIPT VALUES -->
+
+  <script type="text/javascript">
+    (function() {
+      var jasmineEnv = jasmine.getEnv();
+      jasmineEnv.updateInterval = 1000;
+
+      var htmlReporter = new jasmine.HtmlReporter();
+//      jasmineEnv.addReporter(htmlReporter);
+
+      // Use the trivial reporter for tie in with the run-jasmine.js script
+      jasmineEnv.addReporter(new jasmine.TrivialReporter());
+
+      // Use the console reporter for printing results directly to console for
+      // headless testing
+      jasmineEnv.addReporter(new jasmine.ConsoleReporter());
+
+      jasmineEnv.specFilter = function(spec) {
+        return htmlReporter.specFilter(spec);
+      };
+
+      var currentWindowOnload = window.onload;
+
+      window.onload = function() {
+        if (currentWindowOnload) {
+          currentWindowOnload();
+        }
+        execJasmine();
+      };
+
+      function execJasmine() {
+        jasmineEnv.execute();
+      }
+
+    })();
+  </script>
+
+</head>
+
+<body>
+</body>
+</html>
