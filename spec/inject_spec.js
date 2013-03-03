@@ -1,6 +1,6 @@
-goog.provide('injectjsSpec');
+goog.provide('injectSpec');
 
-describe('injectjs', function() {
+describe('inject', function() {
   describe('<static>.$inject', function() {
     it('should return a provided dependency', function() {
       fail();
