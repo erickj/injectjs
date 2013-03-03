@@ -114,11 +114,22 @@ describe('inject.InjectedFunctionBuilder', function() {
     });
 
     describe('#addInjectionKey', function() {
-      it('should add injection keys', function() {
-        debugger;
+      it('should add injection keys as strings', function() {
         var InjectedCtor = new inject.InjectedFunctionBuilder(Ctor, container).
             addInjectionKey('foo.bar').
             addInjectionKey('biz.baz').
+            build();
+        var inst = new InjectedCtor('buz-val');
+
+        expect(inst.foo).toBe(fooBarVal);
+        expect(inst.biz).toBe(bizBazVal);
+        expect(inst.buz).toBe('buz-val');
+      });
+
+      it('should add injection keys as objects', function() {
+        var InjectedCtor = new inject.InjectedFunctionBuilder(Ctor, container).
+            addInjectionKey(foo.bar).
+            addInjectionKey(biz.baz).
             build();
         var inst = new InjectedCtor('buz-val');
 
