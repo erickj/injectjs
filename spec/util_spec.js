@@ -17,4 +17,29 @@ describe('inject.util', function() {
       expect(array).toEqual([1,2,3]);
     });
   });
+
+  describe('<static>.getPropertyPath', function() {
+    var scope = {
+      foo: {
+        bar: 'baz'
+      }
+    }
+
+    it('should return the property at the give path from inject.global',
+       function() {
+         var global = inject.global;
+         inject.global = scope;
+         expect(inject.util.getPropertyPath('foo.bar')).toBe('baz');
+         inject.global = global;
+       });
+
+    it('should return the property at the given path from opt_scope',
+       function() {
+         expect(inject.util.getPropertyPath('foo.bar', scope)).toBe('baz');
+       });
+
+    it('should return null for an unknown path', function() {
+      expect(inject.util.getPropertyPath('fiz.buz')).toBe(null);
+    });
+  });
 });
