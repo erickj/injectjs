@@ -31,13 +31,21 @@ describe('inject.Container', function() {
 
   describe('#getDependency', function() {
     var providerFn;
+    var providerFnWasCalled;
+    var result = {};
+
     beforeEach(function() {
-      providerFn = function() {};
+      providerFn = function() {
+        providerFnWasCalled = true;
+        return result;
+      };
+      providerFnWasCalled = false;
       container.provideDependency(key, providerFn);
     });
 
     it('should return a provided dependency', function() {
-      expect(container.getDependency(key)).toBe(providerFn);
+      expect(container.getDependency(key)).toBe(result);
+      expect(providerFnWasCalled).toBe(true);
     });
 
     it('should throw a ContainerMissingDependencyError if there is no dep',
