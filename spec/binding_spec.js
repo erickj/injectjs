@@ -64,17 +64,4 @@ describe('inject.Binding', function() {
       expect(inst2).toNotBe(inst);
     });
   });
-
-  describe('#asSingleton', function() {
-    it('should bind a dependency to a singleton getter', function() {
-      var Singleton = function() {};
-      var inst = new Singleton();
-      Singleton.getInstance = function() {
-        return inst;
-      };
-
-      binding.asSingleton(Singleton).provideToContainer();
-      expect(container.getDependency(key)).toBe(inst);
-    });
-  });
 });
