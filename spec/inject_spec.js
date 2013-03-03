@@ -30,6 +30,7 @@ describe('inject', function() {
       fooBazVal = {};
       window.foo = foo;
 
+      debugger;
       inject.$bind(foo.bar, true /* opt_overwrite */).toInstance(fooBarVal);
       inject.$bind(foo.baz, true /* opt_overwrite */).toInstance(fooBazVal);
     });
