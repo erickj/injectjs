@@ -5,6 +5,8 @@ goog.require('inject.Container');
 goog.require('inject.InjectedFunctionBuilder');
 
 describe('inject.InjectedFunctionBuilder', function() {
+  var isPhantomjs = navigator.userAgent.match(/phantomjs/i);
+
   describe('<static>.parseParams', function() {
     var regex = inject.InjectedFunctionBuilder.ParamsMatcher_;
     var functionExamples = {
@@ -53,7 +55,7 @@ describe('inject.InjectedFunctionBuilder', function() {
     };
     it('should match params in the function examples', function() {
       for (var desc in functionExamples) {
-        if (navigator.userAgent.match(/phantomjs/i) && desc == 'comments') {
+        if (isPhantomjs && desc == 'comments') {
           // PhantomJS strips comments from the fn... uh-oh.  Chrome and FF
           // leave the comment in.
           continue;
@@ -107,20 +109,41 @@ describe('inject.InjectedFunctionBuilder', function() {
 
       container = new inject.Container();
 
-      new inject.Binding(container, foo.bar).
-          toInstance(fooBarVal).provideToContainer();
-      new inject.Binding(container, biz.baz).
-          toInstance(bizBazVal).provideToContainer();
+      new inject.Binding(container, foo.bar).toInstance(fooBarVal);
+      new inject.Binding(container, biz.baz).toInstance(bizBazVal);
     });
 
-    it('should build an injected constructor', function() {
-      var InjectedCtor =
-          new inject.InjectedFunctionBuilder(Ctor, container).build();
-      var inst = new InjectedCtor('buz-val');
+    describe('#addInjectionKey', function() {
+      it('should add injection keys', function() {
+        debugger;
+        var InjectedCtor = new inject.InjectedFunctionBuilder(Ctor, container).
+            addInjectionKey('foo.bar').
+            addInjectionKey('biz.baz').
+            build();
+        var inst = new InjectedCtor('buz-val');
 
-      expect(inst.foo).toBe(fooBarVal);
-      expect(inst.biz).toBe(bizBazVal);
-      expect(inst.buz).toBe('buz-val');
+        expect(inst.foo).toBe(fooBarVal);
+        expect(inst.biz).toBe(bizBazVal);
+        expect(inst.buz).toBe('buz-val');
+      });
+    });
+
+    describe('#injectFromAnnotations', function() {
+
+      it('should build an injected constructor', function() {
+        if (isPhantomjs) {
+          // Parameter parsing doesn't work in PhantomJS. see note above.
+          return;
+        }
+        var InjectedCtor = new inject.InjectedFunctionBuilder(Ctor, container).
+            injectFromAnnotations().
+            build();
+        var inst = new InjectedCtor('buz-val');
+
+        expect(inst.foo).toBe(fooBarVal);
+        expect(inst.biz).toBe(bizBazVal);
+        expect(inst.buz).toBe('buz-val');
+      });
     });
   });
 });
