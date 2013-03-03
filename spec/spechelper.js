@@ -1,3 +1,8 @@
+var goog = goog || {
+  provide: function() {},
+  require: function() {}
+};
+
 goog.provide('spechelper');
 
 var fail = function() {

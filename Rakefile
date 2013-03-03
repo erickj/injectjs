@@ -71,13 +71,13 @@ namespace :build do
   desc 'Compile JS in SIMPLE_OPTIMIZATION mode for [target]'
   task :simple, [:target] => [:init] do |t, args|
     target = args[:target] || DEFAULT_TARGET
-    Utils.build_compiled(Utils.get_js_script_name(target, 'min'), target)
+    Utils.build_compiled(Utils.get_js_script_name(target, 'simple.opt'), target)
   end
 
   desc 'Compile JS in ADVANCED_OPTIMIZAION mode for [target]'
   task :compile, [:target] => [:init] do |t, args|
     target = args[:target] || DEFAULT_TARGET
-    Utils.build_compiled(Utils.get_js_script_name(target, 'opt'), target, true)
+    Utils.build_compiled(Utils.get_js_script_name(target, 'min'), target, true)
   end
 end
 
@@ -102,6 +102,14 @@ namespace :test do
     target = args[:target]
     target = Utils.specize_target_name(Utils.normalize_target_name(target))
     Utils.run_spec(target)
+  end
+
+  desc 'Run spec for compiled inject.js'
+  task :speccompiled, :level do |t, args|
+    level = args[:level] ? args[:level] + '.' : '' # '', min., or simple.opt.
+    scripts = [BUILD_DIR + '/inject.%sjs'%level, SPEC_DIR + '/inject_spec.js']
+    Utils.build_specrunner(DEFAULT_TARGET, scripts)
+    Utils.run_spec(DEFAULT_TARGET)
   end
 
   desc 'Run all specs for [namespace] or ' + NAMESPACE
@@ -191,10 +199,10 @@ class Utils
     end
   end
 
-  def self.build_specrunner(target)
+  def self.build_specrunner(target, script_names=nil)
     puts
     puts "Building specrunner for target: #{target}"
-    script_names = Utils.get_script_deps(target)
+    script_names = Utils.get_script_deps(target) unless script_names
     script_names.insert(-2, SPECHELPER_PATH)
     puts script_names
 
