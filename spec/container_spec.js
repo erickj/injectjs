@@ -3,6 +3,7 @@ goog.provide('inject.ContainerSpec');
 goog.require('inject.Container');
 goog.require('inject.ContainerMissingDependencyError');
 goog.require('inject.ContainerOverwriteDependencyError');
+goog.require('inject.util');
 
 describe('inject.Container', function() {
   var container;
@@ -55,5 +56,18 @@ describe('inject.Container', function() {
            container.getDependency('missing key')
          }).toThrowInstanceOf(inject.ContainerMissingDependencyError);
        });
+
+    it('should lookup results by property path if key is a string', function() {
+      var global = inject.global;
+      inject.global = {
+        foo: {
+          bar: key
+        }
+      };
+
+      expect(container.getDependency('foo.bar')).toBe(result);
+      expect(container.getDependency(key)).toBe(result);
+    });
+
   });
 });
