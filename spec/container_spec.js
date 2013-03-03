@@ -2,6 +2,7 @@ goog.provide('inject.ContainerSpec');
 
 goog.require('inject.Container');
 goog.require('inject.ContainerMissingDependencyError');
+goog.require('inject.ContainerOverwriteDependencyError');
 
 describe('inject.Container', function() {
   var container;
@@ -25,7 +26,7 @@ describe('inject.Container', function() {
          expect(function() {
            container.provideDependency(
                key, function() {}, true /* opt_throwIfExists */);
-         }).toThrow();
+         }).toThrowInstanceOf(inject.ContainerOverwriteDependencyError);
        });
   });
 
