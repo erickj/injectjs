@@ -92,7 +92,7 @@ task :lint, [:dir] do |t, args|
   dir += "/#{args[:dir]}" if args[:dir]
   excludes = File.read(GJSLINT_EXCLUDES).split("\n").map do |f|
     f.match(/^\s*#/) ? nil : File.join(JS_DIR, f)
-  end.compact.join(',')
+  end.compact.join(',') rescue ''
   puts %x{#{GJSLINT} --strict --exclude_files=#{excludes} -r #{dir}}
 end
 
