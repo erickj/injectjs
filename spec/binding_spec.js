@@ -34,9 +34,8 @@ describe('inject.Binding', function() {
     it('should cause a dependency to not be set, if one is set', function() {
       var inst = {};
       container.provideDependency(key, function() { return inst; });
-      binding.toInstance({}).unlessProvided();
 
-      expect(binding.provideToContainer()).toBe(false);
+      expect(binding.unlessProvided().toInstance({})).toBe(false);
       expect(container.getDependency(key)).toBe(inst);
     });
   });
@@ -44,8 +43,8 @@ describe('inject.Binding', function() {
   describe('#toInstance', function() {
     it('should bind a dependency to a single instance', function() {
       var inst = {};
-      binding.toInstance(inst).provideToContainer();
 
+      expect(binding.toInstance(inst)).toBe(true);
       expect(container.getDependency(key)).toBe(inst);
     });
   });
@@ -56,7 +55,8 @@ describe('inject.Binding', function() {
         this.x = "x";
       };
 
-      binding.asConstructor(Ctor).provideToContainer();
+      expect(binding.asConstructor(Ctor)).toBe(true);
+
       var inst = container.getDependency(key);
       var inst2 = container.getDependency(key);
       expect(inst).toBeA(Ctor);
