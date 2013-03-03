@@ -2,8 +2,8 @@ require 'erb'
 require 'fileutils'
 require 'open3'
 
-NAMESPACE = 'injectjs'
-DEFAULT_TARGET = 'injectjs'
+NAMESPACE = 'inject'
+DEFAULT_TARGET = 'inject'
 
 BASE_DIR = FileUtils.pwd
 JS_DIR = BASE_DIR + '/lib'
@@ -26,7 +26,7 @@ SPECRUNNER_TPL = '_specrunner.erb'
 PHANTOMJS_RUNNER = 'phantomjs run-jasmine.js'
 JASMINE_ROOT_PATH = THIRD_PARTY_DIR + '/jasmine-1.3.1'
 
-JS_AUTO_INCLUDES = [JS_DIR + '/injectjs.js']
+JS_AUTO_INCLUDES = [JS_DIR + '/inject.js']
 CLOSURE_BUILDER = CLOSURE_LIB_DIR + '/bin/build/closurebuilder.py'
 CLOSURE_BUILDER_ROOTS = "--root=#{CLOSURE_LIB_DIR} \
   --root=#{CLOSURE_LIB_THIRD_PARTY_DIR} \
