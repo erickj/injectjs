@@ -6,12 +6,6 @@ goog.require('inject.Binding');
 describe('inject', function() {
   var isPhantomjs = navigator.userAgent.match(/phantomjs/i);
 
-  var Ctor = function(/* @inject {a.property.Path} */ path) {};
-  var a = {
-    property: {
-      Path: {}
-    }
-  }
   describe('<static>.$inject', function() {
     var Ctor = function(
         /* @inject {foo.bar} */ bar, /* @inject {foo.baz} */ baz) {
@@ -30,7 +24,6 @@ describe('inject', function() {
       fooBazVal = {};
       window.foo = foo;
 
-      debugger;
       inject.$bind(foo.bar, true /* opt_overwrite */).toInstance(fooBarVal);
       inject.$bind(foo.baz, true /* opt_overwrite */).toInstance(fooBazVal);
     });
