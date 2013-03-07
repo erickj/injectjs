@@ -101,6 +101,13 @@ namespace :test do
   task :spec, :target do |t, args|
     target = args[:target]
     target = Utils.specize_target_name(Utils.normalize_target_name(target))
+    Utils.run_spec(target)
+  end
+
+  task :"spec-in-browser", :target do |t, args|
+    target = args[:target]
+    target = Utils.specize_target_name(Utils.normalize_target_name(target))
+    Utils.run_spec_in_browser(target)
   end
 
   desc 'Run spec for compiled inject.js'
@@ -308,4 +315,11 @@ EOS
     $?
   end
 
+  ##
+  # Run the spec in the default browser
+  def self.run_spec_in_browser(target)
+    spec_url = TEST_PROTOCOL + File.join(TEST_BUILD_DIR, "#{target}.html")
+    puts "Opening Spec for #{target}"
+    puts %x{xdg-open #{spec_url}}
+  end
 end
