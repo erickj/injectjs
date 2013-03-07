@@ -37,7 +37,7 @@ CLOSURE_COMPILER = THIRD_PARTY_DIR + '/closure-compiler/compiler.jar'
 GJSLINT = '/usr/local/bin/gjslint'
 GJSLINT_EXCLUDES = BASE_DIR + '/.gjslintexcludes'
 
-task :default => [:concat]
+task :default => [:"test:specs"]
 
 desc 'Init the build workspace'
 task :init do
@@ -101,7 +101,6 @@ namespace :test do
   task :spec, :target do |t, args|
     target = args[:target]
     target = Utils.specize_target_name(Utils.normalize_target_name(target))
-    Utils.run_spec(target)
   end
 
   desc 'Run spec for compiled inject.js'
@@ -119,11 +118,13 @@ namespace :test do
 
     puts "Running specs for namespace [#{ns}]"
     puts
+    success = true;
     Dir.glob(File.join(spec_build_dir, ns + "*.html")) do |file|
       puts file
       target = file.split('/').last.gsub('.html','')
-      Utils.run_spec(target)
+      success &&= Utils.run_spec(target).exitstatus == 0
     end
+    Kernel.exit success
   end
 
   desc 'Generate spec runner for [target]'
@@ -304,6 +305,7 @@ EOS
     spec_url = TEST_PROTOCOL + File.join(TEST_BUILD_DIR, "#{target}.html")
     puts "Running Spec for #{target}"
     puts %x{#{PHANTOMJS_RUNNER} #{spec_url}}
+    $?
   end
 
 end
