@@ -99,6 +99,8 @@ describe('inject.InjectedFunctionBuilder', function() {
     var globalScope;
 
     beforeEach(function() {
+      globalScope = {};
+
       var foo = { bar: 'foo-bar-key' };
       var biz = { baz: 'biz-baz-key' };
       fooBarVal = {};
@@ -113,17 +115,52 @@ describe('inject.InjectedFunctionBuilder', function() {
       new inject.Binding(container, biz.baz).toInstance(bizBazVal);
     });
 
+    describe('parameter currying', function() {
+      it('should pass uncurried parameters correctly', function() {
+        var InjectedCtor = new inject.InjectedFunctionBuilder(Ctor, container).
+          addInjectionKey('foo.bar').
+          addInjectionKey('biz.baz').
+          build();
+        var inst = new InjectedCtor('buz-val');
+
+        expect(inst.buz).toBe('buz-val');
+      });
+    });
+
+    describe('#setScope', function() {
+      it('should be able to set function scope', function() {
+        var scope = { x: 'me' };
+        var getX = function() { return this.x; };
+        var injectedFunction =
+            new inject.InjectedFunctionBuilder(getX, container).
+                setScope(scope).
+                build();
+        expect(injectedFunction()).toBe('me');
+      });
+
+      it('should ALWAYS use `this` as scope in constructors', function() {
+        globalScope.foo = "not foo bar val";
+
+        var InjectedCtor = new inject.InjectedFunctionBuilder(Ctor, container).
+            setScope(globalScope). // expect this to be ignored
+            addInjectionKey('foo.bar').
+            addInjectionKey('biz.baz').
+            build();
+        var inst = new InjectedCtor();
+        expect(inst.foo).toBe(fooBarVal);
+      });
+    });
+
     describe('#addInjectionKey', function() {
       it('should add injection keys as strings', function() {
         var InjectedCtor = new inject.InjectedFunctionBuilder(Ctor, container).
             addInjectionKey('foo.bar').
             addInjectionKey('biz.baz').
             build();
-        var inst = new InjectedCtor('buz-val');
+        var inst = new InjectedCtor();
 
         expect(inst.foo).toBe(fooBarVal);
         expect(inst.biz).toBe(bizBazVal);
-        expect(inst.buz).toBe('buz-val');
       });
 
       it('should add injection keys as objects', function() {
@@ -131,11 +168,10 @@ describe('inject.InjectedFunctionBuilder', function() {
             addInjectionKey(foo.bar).
             addInjectionKey(biz.baz).
             build();
-        var inst = new InjectedCtor('buz-val');
+        var inst = new InjectedCtor();
 
         expect(inst.foo).toBe(fooBarVal);
         expect(inst.biz).toBe(bizBazVal);
-        expect(inst.buz).toBe('buz-val');
       });
     });
 
